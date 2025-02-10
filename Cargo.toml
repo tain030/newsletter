@@ -11,9 +11,9 @@ name = "subscriptions"
 path = "src/main.rs"
 
 [dependencies]
-axum = "0.8.1"
+actix-web = "4.9.0"
+serde = { version = "1.0.217", features = ["derive"] }
 tokio = { version = "1.43.0", features = ["full"] }
-tower = "0.5.2"
 
 [dev-dependencies]
 reqwest = "0.12.12"
