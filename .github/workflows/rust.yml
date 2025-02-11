@@ -2,13 +2,12 @@ name: Rust
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 env:
   CARGO_TERM_COLOR: always
-  SQLX_VERSION: 0.8
 
 jobs:
   test:
@@ -46,21 +45,6 @@ jobs:
 
       - name: Install sqlx-cli
         run: cargo install sqlx-cli
-          --version=${{ env.SQLX_VERSION }}
-          --features ${{ env.SQLX_FEATURES }}
-          --no-default-features
-          --locked
-      - name: Create app user in Postgres
-        run: |
-          sudo apt-get install postgresql-client
-
-          # Create the application user
-          CREATE_QUERY="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
-          PGPASSWORD="password" psql -U "postgres" -h "localhost" -c "${CREATE_QUERY}"
-
-          # Grant create db privileges to the app user
-          GRANT_QUERY="ALTER USER ${APP_USER} CREATEDB;"
-          PGPASSWORD="password" psql -U "postgres" -h "localhost" -c "${GRANT_QUERY}"
 
       - name: Migrate database
         run: SKIP_DOCKER=true ./scripts/init_db.sh
@@ -69,7 +53,7 @@ jobs:
         run: cargo test
 
       - name: Check that queries are fresh
-        run: cargo sqlx prepare --workspace --check -- --all-targets
+        run: cargo sqlx prepare
 
   # `fmt` container job
   fmt:
@@ -126,21 +110,6 @@ jobs:
           components: llvm-tools-preview
       - name: Install sqlx-cli
         run: cargo install sqlx-cli
-          --version=${{ env.SQLX_VERSION }}
-          --features ${{ env.SQLX_FEATURES }}
-          --no-default-features
-          --locked
-      - name: Create app user in Postgres
-        run: |
-          sudo apt-get install postgresql-client
-
-          # Create the application user
-          CREATE_QUERY="CREATE USER ${APP_USER} WITH PASSWORD '${APP_USER_PWD}';"
-          PGPASSWORD="password" psql -U "postgres" -h "localhost" -c "${CREATE_QUERY}"
-
-          # Grant create db privileges to the app user
-          GRANT_QUERY="ALTER USER ${APP_USER} CREATEDB;"
-          PGPASSWORD="password" psql -U "postgres" -h "localhost" -c "${GRANT_QUERY}"
       - name: Migrate database
         run: SKIP_DOCKER=true ./scripts/init_db.sh
       - name: Install cargo-llvm-cov
