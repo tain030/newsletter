@@ -3,6 +3,7 @@ use serde::Deserialize;
 use sqlx::PgConnection;
 
 #[derive(Deserialize)]
+#[allow(dead_code)]
 pub struct FormData {
     email: String,
 }
