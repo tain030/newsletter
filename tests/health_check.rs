@@ -1,4 +1,6 @@
-use subscriptions::run;
+use newsletter::configuration::get_configuration;
+use newsletter::startup::run;
+use sqlx::{Connection, PgConnection};
 use std::net::TcpListener;
 
 #[tokio::test]
@@ -17,8 +19,14 @@ async fn health_check_works() {
 }
 
 #[tokio::test]
-async fn subscribe_success() {
+async fn subscribe_returns_a_200_for_valid_form_data() {
     let address = spawn_app();
+    let configuration = get_configuration().expect("Failed to read configuration");
+
+    let connection_string = configuration.database.connection_string();
+    let mut connection = PgConnection::connect(&connection_string)
+        .await
+        .expect("Failed to connect to Postgres.");
     let client = reqwest::Client::new();
 
     let body = "email=admin@example.com";
@@ -31,6 +39,13 @@ async fn subscribe_success() {
         .expect("Failed to execute request.");
 
     assert!(response.status().is_success());
+
+    let saved = sqlx::query!("SELECT email FROM subscriptions",)
+        .fetch_one(&mut connection)
+        .await
+        .expect("Failed to fetch saved subscription.");
+
+    assert_eq!(saved.email, "admin@example.com");
 }
 
 #[tokio::test]
@@ -40,7 +55,7 @@ async fn subscribe_fail() {
 
     let test_cases = vec![
         ("email=admin", "invalid email form"),
-        ("", "missing the email")
+        ("", "missing the email"),
     ];
     for (invalid_body, error_message) in test_cases {
         let response = client
@@ -51,12 +66,7 @@ async fn subscribe_fail() {
             .await
             .expect("Failed to execute request.");
 
-        assert_eq!(
-            400,
-            response.status().as_u16(),
-            "Error: {}.",
-            error_message
-        );
+        assert_eq!(400, response.status().as_u16(), "Error: {}.", error_message);
     }
 }
 
