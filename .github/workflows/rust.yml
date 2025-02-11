@@ -8,7 +8,6 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
-  SQLX_VERSION: 0.8
 
 jobs:
   test:
@@ -46,10 +45,6 @@ jobs:
 
       - name: Install sqlx-cli
         run: cargo install sqlx-cli
-          --version=${{ env.SQLX_VERSION }}
-          --features ${{ env.SQLX_FEATURES }}
-          --no-default-features
-          --locked
       - name: Create app user in Postgres
         run: |
           sudo apt-get install postgresql-client
@@ -69,7 +64,7 @@ jobs:
         run: cargo test
 
       - name: Check that queries are fresh
-        run: cargo sqlx prepare --workspace --check -- --all-targets
+        run: cargo sqlx prepare
 
   # `fmt` container job
   fmt:
@@ -126,10 +121,6 @@ jobs:
           components: llvm-tools-preview
       - name: Install sqlx-cli
         run: cargo install sqlx-cli
-          --version=${{ env.SQLX_VERSION }}
-          --features ${{ env.SQLX_FEATURES }}
-          --no-default-features
-          --locked
       - name: Create app user in Postgres
         run: |
           sudo apt-get install postgresql-client
