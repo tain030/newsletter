@@ -1,28 +1,26 @@
-# Builder stage
-FROM rust:1.83 AS builder
-
+FROM lukemathwalker/cargo-chef:latest-rust-1.83 as chef
 WORKDIR /app
 RUN apt update && apt install lld clang -y
 
-RUN cargo install sccache
-ENV RUSTC_WRAPPER=sccache
-COPY Cargo.toml Cargo.lock ./
+FROM chef as planner
+COPY . .
 
-RUN mkdir src \
-    && echo "fn main() {}" > src/main.rs \
-    && echo "" > src/lib.rs \
-    && cargo build --release --bin newsletter
+RUN cargo chef prepare  --recipe-path recipe.json
 
+FROM chef as builder
+COPY --from=planner /app/recipe.json recipe.json
+
+RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 ENV SQLX_OFFLINE=true
+
 RUN cargo build --release --bin newsletter
 
-# Runtime stage
-FROM debian:bullseye-slim AS runtime
-
+FROM debian:bookworm-slim AS runtime
 WORKDIR /app
 RUN apt-get update -y \
     && apt-get install -y --no-install-recommends openssl ca-certificates \
+    # Clean up
     && apt-get autoremove -y \
     && apt-get clean -y \
     && rm -rf /var/lib/apt/lists/*
