@@ -1,17 +1,22 @@
 # Builder stage
-From rust:1.63.0 AS builder
+FROM rust:1.83 AS builder
 
 WORKDIR /app
 RUN apt update && apt install lld clang -y
 
 RUN cargo install sccache
-ENV RUSTC_WRAPPER=sccache
-COPY Cargo.toml Cargo.lock .
-RUN mkdir src && echo "fn main() {}" > src/main.rs && cargo build --release
+ENV RUSTC_WRAPPER sccache
+COPY Cargo.toml Cargo.lock ./
+
+# ✅ src/lib.rs도 생성하여 Cargo가 문제없이 빌드할 수 있도록 수정
+RUN mkdir src \
+    && echo "fn main() {}" > src/main.rs \
+    && echo "" > src/lib.rs \
+    && cargo build --release --bin newsletter
 
 COPY . .
 ENV SQLX_OFFLINE true
-RUN cargo build --release
+RUN cargo build --release --bin newsletter
 
 # Runtime stage
 FROM debian:bullseye-slim AS runtime
