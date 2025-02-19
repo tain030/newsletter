@@ -8,7 +8,6 @@ RUN cargo install sccache
 ENV RUSTC_WRAPPER sccache
 COPY Cargo.toml Cargo.lock ./
 
-# ✅ src/lib.rs도 생성하여 Cargo가 문제없이 빌드할 수 있도록 수정
 RUN mkdir src \
     && echo "fn main() {}" > src/main.rs \
     && echo "" > src/lib.rs \
