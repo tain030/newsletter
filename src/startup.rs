@@ -14,7 +14,18 @@ pub fn run(listener: TcpListener, db_pool: PgPool) -> Result<Server, std::io::Er
             .wrap(Logger::default())
             .wrap(
                 Cors::default()
-                    .allow_any_origin()
+                    .allowed_origin_fn(|origin, _req_head| {
+                        let allowed_origins = vec![
+                            "http://localhost:5173",
+                            "https://ipfs.io",
+                            "https://ktain.sui.id",
+                        ];
+
+                        match origin.to_str() {
+                            Ok(origin_str) => allowed_origins.contains(&origin_str),
+                            Err(_) => false,
+                        }
+                    })
                     .allow_any_method()
                     .allow_any_header(),
             )
