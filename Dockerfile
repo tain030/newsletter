@@ -1,13 +1,13 @@
-FROM lukemathwalker/cargo-chef:latest-rust-1.83 as chef
+FROM lukemathwalker/cargo-chef:latest-rust-1.83 AS chef
 WORKDIR /app
 RUN apt update && apt install lld clang -y
 
-FROM chef as planner
+FROM chef AS planner
 COPY . .
 
 RUN cargo chef prepare  --recipe-path recipe.json
 
-FROM chef as builder
+FROM chef AS builder
 COPY --from=planner /app/recipe.json recipe.json
 
 RUN cargo chef cook --release --recipe-path recipe.json
@@ -15,6 +15,9 @@ COPY . .
 ENV SQLX_OFFLINE=true
 
 RUN cargo build --release --bin newsletter
+
+FROM chef AS sqlx
+RUN cargo install sqlx-cli
 
 FROM debian:bookworm-slim AS runtime
 WORKDIR /app
@@ -26,5 +29,9 @@ RUN apt-get update -y \
     && rm -rf /var/lib/apt/lists/*
 COPY --from=builder /app/target/release/newsletter newsletter
 COPY configuration configuration
+COPY migrations migrations
+
 ENV APP_ENVIRONMENT=production
+ENV DATABASE_URL=${DATABASE_URL}
+
 ENTRYPOINT ["./newsletter"]

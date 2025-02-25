@@ -2,8 +2,8 @@ application:
   host: 0.0.0.0
   port: 8000
 database:
-  host: "127.0.0.1"
+  host: "ep-bold-wildflower-a2dso7rn.eu-central-1.pg.koyeb.app"
   port: 5432
-  username: "postgres"
-  password: 1234
-  database_name: "newsletter"
+  username: "koyeb-adm"
+  password: "npg_eIScEADZv3m5"
+  database_name: "koyebdb"
